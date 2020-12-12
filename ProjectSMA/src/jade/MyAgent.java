@@ -350,8 +350,8 @@ public class MyAgent extends Agent
                             send(reply);
                             seller++;
                         }
-                    }
-                }
+                    }else seller++;
+                }else seller++;
             }
         } catch (FIPAException fe) { fe.printStackTrace(); }
     }
