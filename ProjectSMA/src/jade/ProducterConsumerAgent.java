@@ -21,7 +21,7 @@ import jade.domain.DFService;
 import jade.domain.FIPAException;
 
 /**
- * Class of agent that produce an consume products
+ * This class where we describe functions to handle the production and the consumption of the differents products
  */
 public class ProducterConsumerAgent extends Agent {
 
@@ -34,7 +34,7 @@ public class ProducterConsumerAgent extends Agent {
 	protected double money;
 
 	/**
-	 * 
+	 * The function to SETUP our agent
 	 */
 	protected void setup() {
 		
@@ -73,6 +73,9 @@ public class ProducterConsumerAgent extends Agent {
 			}
 		}
 
+		/**
+		* Function to add an atomic behaviour that executes just once
+		*/
 		addBehaviour(new OneShotBehaviour(this) {
 			public void action() {
 				ServiceDescription sd = new ServiceDescription();
@@ -82,7 +85,12 @@ public class ProducterConsumerAgent extends Agent {
 				System.out.println("Agent "+getLocalName() + " has been registered ");
 			}
 		});
-
+		
+		/**
+		* Function to add a Behaviour that periodically executes in our case each (100 ms)
+		* @param behaviour
+		* @param period
+		*/
 		addBehaviour(new TickerBehaviour(this, 100) {
 
 			public void onTick() {
@@ -91,7 +99,7 @@ public class ProducterConsumerAgent extends Agent {
 				System.out.println("---- " + getLocalName() + "\n#satisfatcion = " + satisfaction
 						+ "\n#production stock = " + production.getQuantity() + " / " + maxStock + "\n#consomation = "
 						+ consumption.getQuantity() + " / " + consumptionRythm + "\n#money = " + money
-						+ "\n#price of product = " + production.getPrice() + "€");
+						+ "\n#price of product = " + production.getPrice() + "â‚¬");
 
 				if (getProduction().getQuantity() + productionRythm <= maxStock)
 					produceProduct();
@@ -122,8 +130,8 @@ public class ProducterConsumerAgent extends Agent {
 	}
 
 	/**
-	 * 
-	 * @param sd ServiceDescription
+	 * function that reigster a service
+	 * @param ServiceDescription : the description of our service   
 	 */
 	public void register(ServiceDescription sd) {
 		DFAgentDescription dfd = new DFAgentDescription();
@@ -137,8 +145,8 @@ public class ProducterConsumerAgent extends Agent {
 	}
 
 	/**
-	 *
-	 * 
+	 * Function to sell a product by the agent 
+	 * and do propositions to other agents in the system
 	 */
 	public void sellProduct() {
 
@@ -192,7 +200,8 @@ public class ProducterConsumerAgent extends Agent {
 	}
 
 	/**
-	 * 
+	 * Function to by a certain product from another agent 
+	 * And see products propositions 
 	 */
 	public void buyProduct() {
 
@@ -268,7 +277,10 @@ public class ProducterConsumerAgent extends Agent {
 		}
 	}
 
-	
+	/**
+	* Function to delete files where we stored satisfactions values 
+	* Needed if the program run multiple times
+	*/
 	public void cleanLogs() {
 		File folder = new File("logSatisfaction");
 		File[] listOfFiles = folder.listFiles();
@@ -286,6 +298,11 @@ public class ProducterConsumerAgent extends Agent {
 		}
 	}
 	
+	/**
+	* Function to write the satisfaction value to the file of the agent 
+	* @param agentName : name of the agent	
+	* @param satisfaction : satisfaction value 
+	*/
 	public void satisfactionLog(String agentName, double satisfaction) {
 
 		try {
@@ -316,6 +333,10 @@ public class ProducterConsumerAgent extends Agent {
 		this.satisfaction = satisfaction;
 	}
 
+	/**
+	* Function to update price of product
+	* @param ratePrice : The rate of the update
+	*/
 	public void updateProductPrice(double ratePrice) {
 		production.updatePrice(ratePrice);
 
