@@ -1,5 +1,10 @@
 package jade;
 
-public class ProductA extends Product { 
-    public ProductA(float price, float quantity) { super(price, quantity); } 
-} 
+public class ProductA extends Product {
+
+	public ProductA(double price, int quantity) {
+
+		super(price, quantity);
+
+	}
+}

@@ -12,347 +12,322 @@ import jade.domain.DFService;
 import jade.domain.FIPAException;
 
 /**
- * Class describing the attributes and behaviours of our agent, producting and consuming two different production at given rates, and trying to maximize a level of satisfaction
+ * 
  */
-public class MyAgent extends Agent
-{
-    /**
-     * Level of satisfaction of the agent
-     */
-    protected float satisfaction;
+public class MyAgent extends Agent {
 
-    /**
-     * Product produced by the agent
-     */
-    protected Product production;
+	protected double satisfaction;
+	protected Product production;
+	protected Product consumption;
+	protected int maxStock;
+	protected int productionRythm;
+	protected int consumptionRythm;
+	protected double money;
 
-    /**
-     * Product consumed by the agent
-     */
-    protected Product consumption;
+	/**
+	 * 
+	 */
+	protected void setup() {
 
-    /**
-     * Maximum stock of production that the agent can handle
-     */
-    protected int maxStock;
+		Object[] args = getArguments();
+		if ((args != null) && (args.length != 0)) {
 
-    /**
-     * Rate at which the production quantity increases
-     */
-    protected int productionRate;
+			try {
 
-    /**
-     * Rate at which the consumption quantity decreases
-     */
-    protected int consumptionRate;
+				this.satisfaction = 1;
+				String productionArgument = args[0].toString();
 
-    /**
-     * Amount of money held by the agent
-     */
-    protected float money;
-    
-    /**
-     * setup of the agent: initialization of its attributes and behaviours
-     */
-    protected void setup()
-    {
-        Object[] args = getArguments();
-        if ((args != null) && (args.length != 0))
-        {
-            try {
-                this.satisfaction = 1.0f;
-                String flagProduction = args[0].toString();
-                switch(flagProduction) {
-                    case "A": this.production = new ProductA(1.0f, 0.0f); break;
-                    case "B": this.production = new ProductB(1.0f, 0.0f); break;
-                    case "C": this.production = new ProductC(1.0f, 0.0f); break;
-                    default: this.production = new Product(1.0f, 0.0f); break;
-                }
-                String flagConsumption = args[1].toString();
-                switch(flagConsumption) {
-                    case "A": this.consumption = new ProductA(1.0f, 0.0f); break;
-                    case "B": this.consumption = new ProductB(1.0f, 0.0f); break;
-                    case "C": this.consumption = new ProductC(1.0f, 0.0f); break;
-                    default: this.consumption = new Product(1.0f, 0.0f); break;
-                }
-                this.maxStock = Integer.parseInt(args[2].toString()); 
-                this.productionRate = Integer.parseInt(args[3].toString()); 
-                this.consumptionRate = Integer.parseInt(args[4].toString()); 
-                this.money = 10.0f;
-            } catch (Exception e ) {
-                e.printStackTrace();
-            }
-        }
+				switch (productionArgument) {
+				case "A":
+					this.production = new ProductA(1, 0);
+					break;
+				case "B":
+					this.production = new ProductB(1, 0);
+					break;
+				case "C":
+					this.production = new ProductC(1, 0);
+					break;
+				default:
+					this.production = new Product(1, 0);
+					break;
+				}
 
-        /**
-         * OneShotBehaviour used to register the agent to the DF
-         * @param  agent agent associated to this behaviour
-         * @return null
-         */
-        addBehaviour(new OneShotBehaviour(this){
-            public void action(){ 
-                ServiceDescription sd = new ServiceDescription();
-                sd.setType(getProduction().getType());
-                sd.setName(getLocalName());
-                register(sd);
-                System.out.println(getLocalName() + " registered to DF :\n\t" + toString() + "\n");
-            }
-	    });
+				String consumptionArgument = args[1].toString();
 
-        /**
-         * TickerBehaviour used to update satisfaction of the agent, launch buying or selling actions, launch production and consumption, update production prices
-         * @param  agent agent associated to this behaviour
-         * @param  period period of time between two updates
-         * @return null
-         */
-        addBehaviour(new TickerBehaviour(this, 1000) {
-            /**
-             * onTick callback method called everytime the period of wait of the behaviour is over
-             */
-            public void onTick(){
-                System.out.println(getLocalName() + ": " + satisfaction + " | prod=" + production.getQuantity() + " | cons=" + consumption.getQuantity());
+				switch (consumptionArgument) {
+				case "A":
+					this.consumption = new ProductA(1, 0);
+					break;
+				case "B":
+					this.consumption = new ProductB(1, 0);
+					break;
+				case "C":
+					this.consumption = new ProductC(1, 0);
+					break;
+				default:
+					this.consumption = new Product(1, 0);
+					break;
+				}
 
-                // Produce (if not working increase satisfaction)
-                if (getProduction().getQuantity() < maxStock)
-                    produce();
-                else
-                    updateSatisfaction(1.0f);
+				this.maxStock = Integer.parseInt(args[2].toString());
+				this.productionRythm = Integer.parseInt(args[3].toString());
+				this.consumptionRythm = Integer.parseInt(args[4].toString());
+				this.money = 50;
+				System.out.println(getLocalName() + " " + consumption.getTypeProduct() + " " + maxStock + " "
+						+ productionRythm + " " + consumptionRythm);
 
-                // Consume (decrease satisfaction if stock is null)
-                if (consumption.getQuantity() > 0)
-                    consume();
-                else {
-                    // Can't consume
-                    updateSatisfaction(satisfaction * 0.9f);
-                    // Look for consumption
-                    buy();
-                }
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 
-                // If production exists, sell it
-                if (production.getQuantity() > 0.0f) {
-                    sell();
-                }
+		addBehaviour(new OneShotBehaviour(this) {
+			public void action() {
+				ServiceDescription sd = new ServiceDescription();
+				sd.setType(getProduction().getTypeProduct());
+				sd.setName(getLocalName());
+				registerToDF(sd);
+				System.out.println(getLocalName() + " registered to DF :\n\t" + toString() + "\n");
+			}
+		});
 
-                // Update price of production if needed
-                if (satisfaction < 1 && money == 0)
-                    updateProductPrice(0.9f);
-                
-                else if (satisfaction == 1 && money > 0)
-                    updateProductPrice(1.1f);
-                
-            }
-        });
-    }
+		addBehaviour(new TickerBehaviour(this, 3000) {
 
-    /**
-     * register function used to register the agent and its provided service to the DF
-     * @param sd description of the service provided by the agent
-     */
-    public void register(ServiceDescription sd) {
-        DFAgentDescription dfd = new DFAgentDescription();
-        dfd.setName(getAID());
-        dfd.addServices(sd);
-        try { DFService.register(this, dfd); } catch (FIPAException fe) { fe.printStackTrace(); }
-    }
+			public void onTick() {
 
-    /**
-     * produce increases the quantity of the production
-     */
-    public void produce() {
-            production.addToStock(productionRate);
-    }
+				System.out.println(getLocalName() + "\n#satisfatcion = " + satisfaction + "\n#production stock = "
+						+ production.getQuantity() + "\n#consomation = " + consumption.getQuantity() + "\n#money = "
+						+ money + "\n#price of product = " + production.getPrice() + "€");
 
-    /**
-     * consume decreases the quantity of the consumption
-     */
-    public void consume() {
-            production.removeFromStock(consumptionRate);
-    }
+				if (getProduction().getQuantity() + productionRythm <= maxStock)
+					produceProduct();
 
-    /**
-     * updateSatisfaction passes on a new value to the satisfaction attribute of the agent
-     * @param satisfaction new satisfaction value
-     */
-    public void updateSatisfaction(float satisfaction) {
-        this.satisfaction = satisfaction;
-    }
+				if (consumption.getQuantity() >= consumptionRythm) {
+					consumeProduct();
+					updateSatisfaction(1.0);
+				}
 
-    /**
-     * updateProductPrice modifies the price of the production according to a given rate
-     * @param rate value used to modifiy the price of the production
-     */
-    public void updateProductPrice(float rate) {
-        production.updatePrice(rate);
-    }
+				else {
+					updateSatisfaction(satisfaction * 0.1);
+					buyProduct();
+				}
 
-    /**
-     * getSatisfaction basic getter
-     * @return satisfaction of the agent
-     */
-    public float getSatisfaction() { return satisfaction; }
+				if (production.getQuantity() > 0.0)
+					sellProduct();
 
-    /**
-     * getProduction basic getter
-     * @return product produced by the agent
-     */
-    public Product getProduction() { return production; }
+				if (satisfaction < 0.5 && money <= 0) //probleme = pas assez de money veut pas dire money<=0
+					updateProductPrice(0.9);
 
-    /**
-     * getConsumption basic getter
-     * @return product consumed by the agent
-     */
-    public Product getConsumption() { return consumption; }
+				else if (satisfaction == 1 && money > 0)
+					updateProductPrice(1.1);
 
-    /**
-     * getMaxStock basic getter
-     * @return maximum production quantity of the agent
-     */
-    public int getMaxStock() { return maxStock; }
+				block();
+			}
 
-    /**
-     * getProductionRate basic getter
-     * @return rate of production of the agent
-     */
-    public int getProductionRate() { return productionRate; }
+		});
+	}
 
-    /**
-     * getConsumptionRate basic getter
-     * @return rate of consumption of the agent
-     */
-    public int getConsumptionRate() { return consumptionRate; }
+	/**
+	 * 
+	 * @param sd ServiceDescription
+	 */
+	public void registerToDF(ServiceDescription sd) {
+		DFAgentDescription dfd = new DFAgentDescription();
+		dfd.setName(getAID());
+		dfd.addServices(sd);
+		try {
+			DFService.register(this, dfd);
+		} catch (FIPAException fe) {
+			fe.printStackTrace();
+		}
+	}
 
-    /**
-     * getMoney basic getter
-     * @return money amount of the agent
-     */
-    public float getMoney() { return money; }
+	/**
+	 *
+	 * 
+	 */
+	public void sellProduct() {
 
-    /**
-     * toString descripts the state of the agent
-     * @return description of the agent's attributes
-     */
-    @Override
-    public String toString() 
-    { 
-        return("" + this.getClass().getSimpleName() + 
-                "(satisfaction=" + this.getSatisfaction() + 
-                ", production=" + this.getProduction().toString() + 
-                ", consumption=" + this.getConsumption().toString() + 
-                ", maxStock=" + this.getMaxStock() +
-                ", productionRate=" + this.getProductionRate() +
-                ", consumptionRate=" + this.getConsumptionRate() +
-                ", money=" + this.getMoney() + 
-                ")"); 
-    } 
+		MessageTemplate msgT = MessageTemplate.MatchPerformative(ACLMessage.CFP);
+		ACLMessage msg = receive(msgT);
 
-    /**
-     * sell handles product request from customers to sell production
-     */
-    public void sell() {
-        MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
-        ACLMessage msg = receive(mt);
-        if (msg != null) {
-            if (msg.getContent().equals("CFP")) {
-                ACLMessage reply = msg.createReply();
+		if (msg != null) {
+			if (msg.getContent().equals("CFP")) {
 
-                // Generate offer with available quantity and price (quantity;price)                
-                reply.setContent("PROPOSE:" + String.valueOf(production.getQuantity()) + ";" + String.valueOf(production.getPrice()));
-                send(reply);
+				ACLMessage reply = msg.createReply();
+				reply.setContent("PROPOSE:" + String.valueOf(production.getQuantity()) + ";"
+						+ String.valueOf(production.getPrice()));
+				reply.setPerformative(ACLMessage.PROPOSE);
+				send(reply);
+				System.err.println("                                            "+getLocalName()+"__"+reply.getContent());
 
-                mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
-                msg = receive(mt);
-                if (msg != null) {
-                    if (msg.getContent().contains("ACCEPT")) {
-                        // Extract required quantity from acceptation
-                        String[] offer = msg.getContent().split(":", 0);
-                        Float requiredQuantity = Float.parseFloat(offer[1]);
-                        if (requiredQuantity <= production.getQuantity()) {
-                            reply = msg.createReply();
-                            reply.setContent("CONFIRM:" + String.valueOf(requiredQuantity) + ";" + String.valueOf(requiredQuantity * production.getPrice()));
-                            send(reply);
+				msgT = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
+				msg = receive(msgT);
 
-                            money += (requiredQuantity * production.getPrice());
-                            production.removeFromStock(requiredQuantity);
-                        }
-                        else {
-                            reply = msg.createReply();
-                            reply.setContent("CANCEL");
-                            send(reply);
-                        }
-                    }
-                    else if (msg.getContent().contains("REJECT")) {
-                        reply = msg.createReply();
-                        reply.setContent("CANCEL");
-                        send(reply);
-                    }
-                }
-            }
-        }
-    }
+				if (msg != null) {
+					if (msg.getContent().contains("ACCEPT")) {
 
-    /**
-     * buy looks for sellers to buy consumption
-     */
-    public void buy() {
-        boolean bought = false;
-        ServiceDescription sd = new ServiceDescription();
-        sd.setType(getConsumption().getType());
-        DFAgentDescription dfd = new DFAgentDescription();
-        dfd.addServices(sd);
-        try {
-            DFAgentDescription[] result = DFService.search(this, dfd);
-            int seller = 0;
-            while (seller < result.length && bought == false) {
-                ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+						String[] propose = msg.getContent().split(":");
+						int nbRequired = (int) Double.parseDouble(propose[1]);
 
-                msg.addReceiver(result[seller].getName());
-                msg.setContent("CFP");
-                send(msg);
+						if (nbRequired <= production.getQuantity()) {
+							reply = msg.createReply();
+							reply.setPerformative(ACLMessage.CONFIRM);
+							reply.setContent("CONFIRM:" + String.valueOf(nbRequired) + ";"
+									+ String.valueOf(nbRequired * production.getPrice()));
+							send(reply);
+							System.err.println("                                            "+getLocalName()+"__"+reply.getContent());
 
-                MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
-                msg = receive(mt);
+							money += (nbRequired * production.getPrice());
+							production.decrementeStock(nbRequired);
+						} else {
+							reply = msg.createReply();
+							reply.setPerformative(ACLMessage.CANCEL);
+							reply.setContent("CANCEL");
+							send(reply);
+						}
+					} else if (msg.getContent().contains("REJECT")) {
+						reply = msg.createReply();
+						reply.setPerformative(ACLMessage.CANCEL);
+						reply.setContent("CANCEL");
+						send(reply);
+					}
+				}
+			}
+		}
+	}
 
-                if (msg != null) {
-                    if (msg.getContent().contains("PROPOSE")) {
-                        String offer = msg.getContent().split(":", 0)[1];
-                        Float availableQuantity = Float.parseFloat(offer.split(";", 0)[0]);
-                        Float price = Float.parseFloat(offer.split(";", 0)[1]);
+	/**
+	 * 
+	 */
+	public void buyProduct() {
 
-                        ACLMessage reply = msg.createReply();
+		boolean buy = false;
+		ServiceDescription sd = new ServiceDescription();
+		sd.setType(getConsumption().getTypeProduct());
+		DFAgentDescription dfd = new DFAgentDescription();
+		dfd.addServices(sd);
 
-                        if (money > price) {
-                            if (money > availableQuantity * price)
-                                reply.setContent("ACCEPT:" + availableQuantity);
-                            else
-                                reply.setContent("ACCEPT:" + money/price);
+		try {
+			DFAgentDescription[] sellers = DFService.search(this, dfd);
+			int index = 0;
+			while (index < sellers.length && buy == false) {
+				ACLMessage msg = new ACLMessage(ACLMessage.CFP);
 
-                            send(reply);
+				msg.addReceiver(sellers[index].getName());
+				msg.setContent("CFP");
+				send(msg);
 
-                            mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
-                            msg = receive(mt);
+				MessageTemplate msgT = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
+				msg = receive(msgT);
 
-                            if (msg != null) {
-                                if (msg.getContent().contains("CONFIRM")) {
-                                    String deal = msg.getContent().split(":", 0)[1];
-                                    Float boughtQuantity = Float.parseFloat(offer.split(";", 0)[0]);
-                                    price = Float.parseFloat(offer.split(";", 0)[1]);
+				if (msg != null) {
+					if (msg.getContent().contains("PROPOSE")) {
 
-                                    money -= price;
-                                    consumption.addToStock(boughtQuantity);
-                                    bought = true;
-                                }
-                                else if (msg.getContent().contains("CANCEL"))
-                                    seller++;
-                            }
-                        }
-                        else {
-                            reply.setContent("REJECT");
-                            send(reply);
-                            seller++;
-                        }
-                    }else seller++;
-                }else seller++;
-            }
-        } catch (FIPAException fe) { fe.printStackTrace(); }
-    }
+						String proposed = msg.getContent().split(":")[1];
+						String[] tabPropose = proposed.split(";");
+						int nbQuantityPossible = Integer.parseInt(tabPropose[0]);
+						double cost = Double.parseDouble(tabPropose[1]);
+
+						ACLMessage reply = msg.createReply();
+
+						if (money > cost) {
+							if (money > nbQuantityPossible * cost)
+								reply.setContent("ACCEPT:" + nbQuantityPossible);
+							else
+								reply.setContent("ACCEPT:" + money / cost);
+
+							reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+							send(reply);
+							System.err.println("                                            "+getLocalName()+"__"+reply.getContent());
+
+							msgT = MessageTemplate.MatchPerformative(ACLMessage.CONFIRM);
+							msg = receive(msgT);
+
+							if (msg != null) {
+								if (msg.getContent().contains("CONFIRM")) {
+
+									int nbBought = Integer.parseInt(tabPropose[0]);
+									cost = Double.parseDouble(tabPropose[1]);
+									money -= cost;
+									consumption.incrementeStock(nbBought);
+									buy = true;
+								} else if (msg.getContent().contains("CANCEL"))
+									index++;
+							}
+						} else {
+							reply.setContent("REJECT");
+							reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
+							send(reply);
+							index++;
+						}
+					} else
+						index++;
+				} else
+					index++;
+			}
+		} catch (FIPAException fe) {
+			fe.printStackTrace();
+		}
+	}
+
+	public void produceProduct() {
+		production.incrementeStock(productionRythm);
+	}
+
+	public void consumeProduct() {
+		consumption.decrementeStock(consumptionRythm);
+	}
+
+	public void updateSatisfaction(double satisfaction) {
+		this.satisfaction = satisfaction;
+	}
+
+	public void updateProductPrice(double ratePrice) {
+		production.updatePrice(ratePrice);
+		
+		if (!production.isAugmentedPrice()) {
+			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+			msg.setContent("INFORM: SALES... decrease of prices !");
+			send(msg);
+			System.err.println("                                            "+getLocalName()+"__"+msg.getContent());
+		}			
+	}
+
+	public double getSatisfaction() {
+		return satisfaction;
+	}
+
+	public Product getProduction() {
+		return production;
+	}
+
+	public Product getConsumption() {
+		return consumption;
+	}
+
+	public int getMaxStock() {
+		return maxStock;
+	}
+
+	public int getProductionRythm() {
+		return productionRythm;
+	}
+
+	public int getConsumptionRythm() {
+		return consumptionRythm;
+	}
+
+	public double getMoney() {
+		return money;
+	}
+
+	@Override
+	public String toString() {
+		return ("" + this.getClass().getSimpleName() + "(satisfaction=" + this.getSatisfaction() + ", production="
+				+ this.getProduction().toString() + ", consumption=" + this.getConsumption().toString() + ", maxStock="
+				+ this.getMaxStock() + ", productionRate=" + this.getProductionRythm() + ", consumptionRate="
+				+ this.getConsumptionRythm() + ", money=" + this.getMoney() + ")");
+	}
+
 }
