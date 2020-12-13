@@ -1,21 +1,17 @@
 package jade;
 
 /**
- * Class of product
+ * Product class 	
  */
 public class Product {
+	
 	/**
-	 * price of the product
-	 */
+        * @param price : the price of the product 
+	* @param quantity :  the quantity of the product 
+        */
 	protected double price;
-	/**
-	 * quantity in stock
-	 */
 	protected int quantity;
-	/**
-	 * <b>True<b> : if the price has been augmented
-	 * <b>False<b> : if the price has been diminued
-	 */
+
 	protected boolean augmentedPrice = false;
 
 	public Product(double price, int quantity) {
@@ -23,15 +19,22 @@ public class Product {
 		this.price = price;
 		this.quantity = quantity;
 	}
+	
+	/**
+        * @param  quantity : the quantity of the product 
+        */
 
 	public void incrementeStock(int quantity) {
 		this.quantity += quantity;
 	}
-
+	
 	public void decrementeStock(int quantity) {
 		this.quantity -= quantity;
 	}
 
+	/**
+        * @param  rate : the rate wich will update the price 
+        */
 	public void updatePrice(double rate) {
 		if(price<price*rate)
 			augmentedPrice = true;
