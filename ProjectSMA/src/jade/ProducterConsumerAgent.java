@@ -3,6 +3,12 @@ package jade;
 import jade.core.Agent;
 import jade.core.behaviours.*;
 import jade.lang.acl.*;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import jade.core.AID;
 import jade.wrapper.AgentContainer;
 import jade.wrapper.AgentController;
@@ -91,14 +97,16 @@ public class ProducterConsumerAgent extends Agent {
 			}
 		});
 
-		addBehaviour(new TickerBehaviour(this, 3000) {
+		addBehaviour(new TickerBehaviour(this, 100) {
 
 			public void onTick() {
 
 				satisfactionLog(getLocalName(),satisfaction);
-				System.out.println(getLocalName() + "\n#satisfatcion = " + satisfaction + "\n#production stock = "
-						+ production.getQuantity() + "\n#consomation = " + consumption.getQuantity() + "\n#money = "
-						+ money + "\n#price of product = " + production.getPrice() + "€");
+				System.out.println("---- "+getLocalName() + "\n#satisfatcion = " + satisfaction 
+						+ "\n#production stock = "+ production.getQuantity() +" / "+maxStock
+						+ "\n#consomation = " + consumption.getQuantity()  +" / "+consumptionRythm
+						+ "\n#money = "+ money 
+						+ "\n#price of product = " + production.getPrice() + "€");
 
 				if (getProduction().getQuantity() + productionRythm <= maxStock)
 					produceProduct();
@@ -109,7 +117,7 @@ public class ProducterConsumerAgent extends Agent {
 				}
 
 				else {
-					updateSatisfaction(satisfaction * 0.1);
+					updateSatisfaction(satisfaction * 0.9);
 					buyProduct();
 				}
 
@@ -168,8 +176,8 @@ public class ProducterConsumerAgent extends Agent {
 				if (msg != null) {
 					if (msg.getContent().contains("ACCEPT")) {
 
-						String[] propose = msg.getContent().split(":");
-						int nbRequired = (int) Double.parseDouble(propose[1]);
+						String[] accepted = msg.getContent().split(":");
+						int nbRequired = (int) Double.parseDouble(accepted[1]);
 
 						if (nbRequired <= production.getQuantity()) {
 							reply = msg.createReply();
@@ -247,12 +255,15 @@ public class ProducterConsumerAgent extends Agent {
 
 							if (msg != null) {
 								if (msg.getContent().contains("CONFIRM")) {
-
-									int nbBought = Integer.parseInt(tabPropose[0]);
-									cost = Double.parseDouble(tabPropose[1]);
+									
+									String confirmed = msg.getContent().split(":")[1];
+									String[] tabConfirm = confirmed.split(";");
+									int nbBought = Integer.parseInt(tabConfirm[0]);
+									cost = Double.parseDouble(tabConfirm[1]);
 									money -= cost;
 									consumption.incrementeStock(nbBought);
 									buy = true;
+									
 								} else if (msg.getContent().contains("CANCEL"))
 									index++;
 							}
@@ -276,8 +287,20 @@ public class ProducterConsumerAgent extends Agent {
 	
 	public void satisfactionLog(String agentName,double satisfaction){
 		
-		
-		
+		 try {
+			   File file = new File("logSatisfaction/"+agentName+".txt");
+
+			   if (!file.exists())
+			    file.createNewFile();
+
+			   FileWriter fw = new FileWriter(file.getAbsoluteFile(),true);
+			   BufferedWriter bw = new BufferedWriter(fw);
+			   bw.write(Double.toString(satisfaction) + System.getProperty("line.separator"));
+			   bw.close();
+
+			  } catch (IOException e) {
+			   e.printStackTrace();
+			  }
 	}
 	
 	public void produceProduct() {
