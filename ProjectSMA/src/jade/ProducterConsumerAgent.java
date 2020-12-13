@@ -4,8 +4,11 @@ import jade.core.Agent;
 import jade.core.behaviours.*;
 import jade.lang.acl.*;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
@@ -34,53 +37,36 @@ public class ProducterConsumerAgent extends Agent {
 	 * 
 	 */
 	protected void setup() {
+		
+		cleanLogs();
 
 		Object[] args = getArguments();
 		if ((args != null) && (args.length != 0)) {
-
+			
 			try {
-
 				this.satisfaction = 1;
-				String productionArgument = args[0].toString();
-
-				switch (productionArgument) {
-				case "A":
-					this.production = new ProductA(1, 0);
-					break;
-				case "B":
-					this.production = new ProductB(1, 0);
-					break;
-				case "C":
-					this.production = new ProductC(1, 0);
-					break;
-				default:
-					this.production = new Product(1, 0);
-					break;
-				}
-
-				String consumptionArgument = args[1].toString();
-
-				switch (consumptionArgument) {
-				case "A":
-					this.consumption = new ProductA(1, 0);
-					break;
-				case "B":
-					this.consumption = new ProductB(1, 0);
-					break;
-				case "C":
-					this.consumption = new ProductC(1, 0);
-					break;
-				default:
-					this.consumption = new Product(1, 0);
-					break;
-				}
-
+				this.money = 50;
 				this.maxStock = Integer.parseInt(args[2].toString());
 				this.productionRythm = Integer.parseInt(args[3].toString());
 				this.consumptionRythm = Integer.parseInt(args[4].toString());
-				this.money = 50;
-				System.out.println(getLocalName() + " " + consumption.getTypeProduct() + " " + maxStock + " "
-						+ productionRythm + " " + consumptionRythm);
+
+				if (args[0].toString().equals("C"))
+					this.production = new ProductC(1, 0);
+				if (args[0].toString().equals("B"))
+					this.production = new ProductB(1, 0);
+				else
+					this.production = new ProductA(1, 0);
+
+				if (args[1].toString().equals("A"))
+					this.consumption = new ProductA(1, 0);
+				if (args[1].toString().equals("C"))
+					this.consumption = new ProductC(1, 0);
+				else
+					this.consumption = new ProductB(1, 0);
+
+				System.out.println("Agent " + getLocalName() + " has been created = consumption : "
+						+ consumption.getTypeProduct() + " max stock : " + maxStock + " production rythm : "
+						+ productionRythm + " consumption rythm : " + consumptionRythm);
 
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -92,8 +78,8 @@ public class ProducterConsumerAgent extends Agent {
 				ServiceDescription sd = new ServiceDescription();
 				sd.setType(getProduction().getTypeProduct());
 				sd.setName(getLocalName());
-				registerToDF(sd);
-				System.out.println(getLocalName() + " registered to DF :\n\t" + toString() + "\n");
+				register(sd);
+				System.out.println("Agent "+getLocalName() + " has been registered ");
 			}
 		});
 
@@ -101,11 +87,10 @@ public class ProducterConsumerAgent extends Agent {
 
 			public void onTick() {
 
-				satisfactionLog(getLocalName(),satisfaction);
-				System.out.println("---- "+getLocalName() + "\n#satisfatcion = " + satisfaction 
-						+ "\n#production stock = "+ production.getQuantity() +" / "+maxStock
-						+ "\n#consomation = " + consumption.getQuantity()  +" / "+consumptionRythm
-						+ "\n#money = "+ money 
+				satisfactionLog(getLocalName(), satisfaction);
+				System.out.println("---- " + getLocalName() + "\n#satisfatcion = " + satisfaction
+						+ "\n#production stock = " + production.getQuantity() + " / " + maxStock + "\n#consomation = "
+						+ consumption.getQuantity() + " / " + consumptionRythm + "\n#money = " + money
 						+ "\n#price of product = " + production.getPrice() + "€");
 
 				if (getProduction().getQuantity() + productionRythm <= maxStock)
@@ -124,7 +109,7 @@ public class ProducterConsumerAgent extends Agent {
 				if (production.getQuantity() > 0.0)
 					sellProduct();
 
-				if (satisfaction < 0.5 && money <= 0) //probleme = pas assez de money veut pas dire money<=0
+				if (satisfaction < 0.5 && money <= 0) // pas assez de money veut pas dire money<=0
 					updateProductPrice(0.9);
 
 				else if (satisfaction == 1 && money > 0)
@@ -140,7 +125,7 @@ public class ProducterConsumerAgent extends Agent {
 	 * 
 	 * @param sd ServiceDescription
 	 */
-	public void registerToDF(ServiceDescription sd) {
+	public void register(ServiceDescription sd) {
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
 		dfd.addServices(sd);
@@ -168,7 +153,7 @@ public class ProducterConsumerAgent extends Agent {
 						+ String.valueOf(production.getPrice()));
 				reply.setPerformative(ACLMessage.PROPOSE);
 				send(reply);
-				System.err.println("                                            "+getLocalName()+"__"+reply.getContent());
+				System.err.println("                                            " + getLocalName() + "__" + reply.getContent());
 
 				msgT = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
 				msg = receive(msgT);
@@ -185,10 +170,10 @@ public class ProducterConsumerAgent extends Agent {
 							reply.setContent("CONFIRM:" + String.valueOf(nbRequired) + ";"
 									+ String.valueOf(nbRequired * production.getPrice()));
 							send(reply);
-							System.err.println("                                            "+getLocalName()+"__"+reply.getContent());
+							System.err.println("                                            " + getLocalName() + "__"+ reply.getContent());
 
 							money += (nbRequired * production.getPrice());
-							production.decrementeStock(nbRequired);
+							production.decrementStock(nbRequired);
 						} else {
 							reply = msg.createReply();
 							reply.setPerformative(ACLMessage.CANCEL);
@@ -248,22 +233,22 @@ public class ProducterConsumerAgent extends Agent {
 
 							reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
 							send(reply);
-							System.err.println("                                            "+getLocalName()+"__"+reply.getContent());
+							System.err.println("                                            " + getLocalName() + "__" + reply.getContent());
 
 							msgT = MessageTemplate.MatchPerformative(ACLMessage.CONFIRM);
 							msg = receive(msgT);
 
 							if (msg != null) {
 								if (msg.getContent().contains("CONFIRM")) {
-									
+
 									String confirmed = msg.getContent().split(":")[1];
 									String[] tabConfirm = confirmed.split(";");
 									int nbBought = Integer.parseInt(tabConfirm[0]);
 									cost = Double.parseDouble(tabConfirm[1]);
 									money -= cost;
-									consumption.incrementeStock(nbBought);
+									consumption.incrementStock(nbBought);
 									buy = true;
-									
+
 								} else if (msg.getContent().contains("CANCEL"))
 									index++;
 							}
@@ -284,31 +269,47 @@ public class ProducterConsumerAgent extends Agent {
 	}
 
 	
-	
-	public void satisfactionLog(String agentName,double satisfaction){
-		
-		 try {
-			   File file = new File("logSatisfaction/"+agentName+".txt");
+	public void cleanLogs() {
+		File folder = new File("logSatisfaction");
+		File[] listOfFiles = folder.listFiles();
 
-			   if (!file.exists())
-			    file.createNewFile();
+		if (listOfFiles != null) {
 
-			   FileWriter fw = new FileWriter(file.getAbsoluteFile(),true);
-			   BufferedWriter bw = new BufferedWriter(fw);
-			   bw.write(Double.toString(satisfaction) + System.getProperty("line.separator"));
-			   bw.close();
-
-			  } catch (IOException e) {
-			   e.printStackTrace();
-			  }
+			for (File file : listOfFiles) {
+				if (file.isFile()) {
+					file.delete();
+				}
+			}
+		}
+		else {
+			System.out.println("Directory logs is already cleaned...");
+		}
 	}
 	
+	public void satisfactionLog(String agentName, double satisfaction) {
+
+		try {
+			File file = new File("logSatisfaction/" + agentName + ".txt");
+
+			if (!file.exists())
+				file.createNewFile();
+
+			FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
+			BufferedWriter bw = new BufferedWriter(fw);
+			bw.write(Double.toString(satisfaction) + System.getProperty("line.separator"));
+			bw.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void produceProduct() {
-		production.incrementeStock(productionRythm);
+		production.incrementStock(productionRythm);
 	}
 
 	public void consumeProduct() {
-		consumption.decrementeStock(consumptionRythm);
+		consumption.decrementStock(consumptionRythm);
 	}
 
 	public void updateSatisfaction(double satisfaction) {
@@ -317,13 +318,13 @@ public class ProducterConsumerAgent extends Agent {
 
 	public void updateProductPrice(double ratePrice) {
 		production.updatePrice(ratePrice);
-		
+
 		if (!production.isAugmentedPrice()) {
 			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 			msg.setContent("INFORM: SALES... decrease of prices !");
 			send(msg);
-			System.err.println("                                            "+getLocalName()+"__"+msg.getContent());
-		}			
+			System.err.println("                                            " + getLocalName() + "__" + msg.getContent());
+		}
 	}
 
 	public double getSatisfaction() {
@@ -356,10 +357,9 @@ public class ProducterConsumerAgent extends Agent {
 
 	@Override
 	public String toString() {
-		return ("" + this.getClass().getSimpleName() + "(satisfaction=" + this.getSatisfaction() + ", production="
-				+ this.getProduction().toString() + ", consumption=" + this.getConsumption().toString() + ", maxStock="
-				+ this.getMaxStock() + ", productionRate=" + this.getProductionRythm() + ", consumptionRate="
-				+ this.getConsumptionRythm() + ", money=" + this.getMoney() + ")");
+		return "ProducterConsumerAgent [satisfaction=" + satisfaction + ", production=" + production + ", consumption="
+				+ consumption + ", maxStock=" + maxStock + ", productionRythm=" + productionRythm
+				+ ", consumptionRythm=" + consumptionRythm + ", money=" + money + "]";
 	}
 
 }

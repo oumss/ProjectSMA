@@ -6,8 +6,9 @@ package jade;
 public class ProductA extends Product {
 
 	/**
-	 * Constructor of A
-	 * @param price : the price of  A
+	 * Constructor of Product of type A
+	 * 
+	 * @param price    : the price of the product A
 	 * @param quantity : the quantity of A
 	 */
 	public ProductA(double price, int quantity) {
