@@ -8,7 +8,7 @@ public class ProductA extends Product {
 	/**
 	 * Constructor of Product of type A
 	 * 
-	 * @param price    : the price of the product A
+	 * @param price    : the price of A
 	 * @param quantity : the quantity of A
 	 */
 	public ProductA(double price, int quantity) {
