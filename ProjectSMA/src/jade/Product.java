@@ -42,7 +42,7 @@ public class Product {
 	}
 
 	/**
-	 * Function that decrement the stock after a selling
+	 * Function that decrement the stock after a consummation
 	 * 
 	 * @param quantity : the quantity of the product
 	 */
@@ -86,14 +86,14 @@ public class Product {
 	/**
 	 * Function that says if the price has increased or not
 	 * 
-	 * @return
+	 * @return True or False
 	 */
 	public boolean isAugmentedPrice() {
 		return augmentedPrice;
 	}
 
 	/**
-	 * Funciton that return the type of the product (A, B or C)
+	 * Function that return the type of the product (A, B or C)
 	 * 
 	 * @return the type of the product
 	 */
