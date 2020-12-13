@@ -14,7 +14,7 @@ import jade.domain.FIPAException;
 /**
  * 
  */
-public class MyAgent extends Agent {
+public class ProducterConsumerAgent extends Agent {
 
 	protected double satisfaction;
 	protected Product production;
