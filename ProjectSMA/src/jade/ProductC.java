@@ -1,14 +1,15 @@
 package jade;
 
 /**
- * Class of product C
+ *  * The class of our third product (C)
+
  */
 public class ProductC extends Product {
 
 	/**
-	 * Constructor of product C
-	 * @param price : the price of the product
-	 * @param quantity : the quantity in stock
+	 * The constructor of C
+	 * @param price : the price of C
+	 * @param quantity : the quantity of  C
 	 */
 	public ProductC(double price, int quantity) {
 
