@@ -1,12 +1,21 @@
 package jade;
 
 /**
- * 
+ * Class of product
  */
 public class Product {
-	
+	/**
+	 * price of the product
+	 */
 	protected double price;
+	/**
+	 * quantity in stock
+	 */
 	protected int quantity;
+	/**
+	 * <b>True<b> : if the price has been augmented
+	 * <b>False<b> : if the price has been diminued
+	 */
 	protected boolean augmentedPrice = false;
 
 	public Product(double price, int quantity) {

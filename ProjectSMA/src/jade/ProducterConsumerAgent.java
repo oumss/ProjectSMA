@@ -12,7 +12,7 @@ import jade.domain.DFService;
 import jade.domain.FIPAException;
 
 /**
- * 
+ * Class of agent that produce an consume products
  */
 public class ProducterConsumerAgent extends Agent {
 
@@ -95,6 +95,7 @@ public class ProducterConsumerAgent extends Agent {
 
 			public void onTick() {
 
+				satisfactionLog(getLocalName(),satisfaction);
 				System.out.println(getLocalName() + "\n#satisfatcion = " + satisfaction + "\n#production stock = "
 						+ production.getQuantity() + "\n#consomation = " + consumption.getQuantity() + "\n#money = "
 						+ money + "\n#price of product = " + production.getPrice() + "€");
@@ -271,6 +272,14 @@ public class ProducterConsumerAgent extends Agent {
 		}
 	}
 
+	
+	
+	public void satisfactionLog(String agentName,double satisfaction){
+		
+		
+		
+	}
+	
 	public void produceProduct() {
 		production.incrementeStock(productionRythm);
 	}
