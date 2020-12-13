@@ -6,10 +6,17 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
+/**
+* This classis is made to calculate the average of the <b>Satisfaction Indicator</b> for every agent in our system
+*/
+
 public class AverageSatisfactionAgent {
 
 	public static void main(String[] args) {
 
+		/**
+		* The file where to store the <b>Satisfaction values</b> for every agent for each time this value has been changed 
+		*/
 		File folder = new File("logSatisfaction");
 		File[] listOfFiles = folder.listFiles();
 
