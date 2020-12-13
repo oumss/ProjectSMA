@@ -7,7 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 
 /**
-* This classis is made to calculate the average of the <b>Satisfaction Indicator</b> for every agent in our system
+* This class is made to calculate the average of the <b>Satisfaction Indicator</b> for every agent in our system
 */
 
 public class AverageSatisfactionAgent {
